@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Text, View, StyleSheet, Button, Linking, Clipboard } from 'react-native';
+import { Text, View, StyleSheet, Button, Linking, Clipboard, FlatList } from 'react-native';
 import { StatusBar } from 'react-native';
 import { Camera } from 'expo-camera';
 
@@ -7,10 +7,12 @@ export default function App() {
   const [hasPermission, setHasPermission] = useState(null);
   const [scanned, setScanned] = useState(false);
   const [text, setText] = useState('Наведите камеру на QR-код');
+  const [history, setHistory] = useState([]);
 
   const handleBarCodeScanned = ({ data }) => {
     setScanned(true);
     setText(data);
+    setHistory(prevHistory => [{ id: Date.now(), data }, ...prevHistory]);
     Linking.openURL(data); // Открывает сканированную ссылку
   };
 
@@ -65,6 +67,17 @@ export default function App() {
           <Button title={'Сканировать ещё?'} onPress={() => setScanned(false)} color="tomato" />
         </View>
       )}
+
+      <Text style={styles.historyTitle}>История сканирования:</Text>
+      <FlatList
+        data={history}
+        keyExtractor={item => item.id.toString()}
+        renderItem={({ item }) => (
+          <Text style={styles.historyItem} onPress={() => Linking.openURL(item.data)}>
+            {item.data}
+          </Text>
+        )}
+      />
     </View>
   );
 }
@@ -81,6 +94,7 @@ const styles = StyleSheet.create({
     aspectRatio: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 50,
   },
   camera: {
     width: '85%',
@@ -98,5 +112,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     width: '100%',
     marginTop: 20,
+  },
+  historyTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginTop: 20,
+  },
+  historyItem: {
+    fontSize: 16,
+    textDecorationLine: 'underline',
+    color: 'blue',
+    marginVertical: 5,
   },
 });
